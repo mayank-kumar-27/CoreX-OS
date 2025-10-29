@@ -3,6 +3,11 @@ node_modules/
 frontend/node_modules/
 backend/node_modules/
 
+# Cache
+.cache/
+frontend/.cache/
+frontend/node_modules/.cache/
+
 # Production build
 frontend/build/
 build/
