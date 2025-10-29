@@ -1,0 +1,204 @@
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+.App {
+  height: 100vh;
+  background: linear-gradient(135deg, #BBE1FA 0%, #3282B8 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.card {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 0;
+  margin-bottom: 20px;
+}
+
+.card-header {
+  background-color: #343a40;
+  color: white;
+  font-weight: bold;
+  border-radius: 0 !important;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.terminal {
+  background-color: #1e1e1e;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  padding: 15px;
+  border-radius: 0;
+  min-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.terminal-input {
+  background-color: transparent;
+  border: none;
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  outline: none;
+  width: 100%;
+}
+
+.gantt-chart {
+  overflow-x: auto;
+  padding: 20px;
+}
+
+.process-bar {
+  height: 40px;
+  margin: 5px 0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.memory-frame {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.memory-frame.occupied {
+  background-color: #28a745;
+  color: white;
+}
+
+.file-item {
+  padding: 8px;
+  margin: 4px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.file-item:hover {
+  background-color: #e9ecef;
+}
+
+.file-item.directory {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.btn-primary {
+  background-color: #667eea;
+  border-color: #667eea;
+}
+
+.btn-primary:hover {
+  background-color: #5568d3;
+  border-color: #5568d3;
+}
+
+.algorithm-selector {
+  margin: 15px 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #BBE1FA;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0F4C75 0%, #3282B8 100%);
+  border-radius: 10px;
+  border: 1px solid #BBE1FA;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #1B262C 0%, #0F4C75 100%);
+}
+
+/* Thin scrollbar for left section */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(15, 76, 117, 0.3);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 76, 117, 0.5);
+}
+
+/* Gradient backgrounds for sections */
+.gradient-cream {
+  background: linear-gradient(135deg, #BBE1FA 0%, #3282B8 100%);
+}
+
+.gradient-mint {
+  background: linear-gradient(135deg, #3282B8 0%, #BBE1FA 100%);
+}
+
+.gradient-coral {
+  background: linear-gradient(135deg, #0F4C75 0%, #3282B8 100%);
+}
+
+.gradient-peach {
+  background: linear-gradient(135deg, #3282B8 0%, #BBE1FA 100%);
+}
