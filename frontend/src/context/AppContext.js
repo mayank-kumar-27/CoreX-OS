@@ -21,36 +21,48 @@ export const AppProvider = ({ children }) => {
   const [fileSystem, setFileSystem] = useState({
     currentPath: '/',
     files: [
-      { name: 'documents', type: 'directory', size: 0, children: [
+      { name: 'Desktop', type: 'directory', size: 0, children: [
+        { name: 'README.md', type: 'file', size: 2048 },
+        { name: 'shortcuts', type: 'directory', size: 0, children: [] }
+      ]},
+      { name: 'Documents', type: 'directory', size: 0, children: [
         { name: 'project_proposal.txt', type: 'file', size: 2048 },
         { name: 'system_design.md', type: 'file', size: 4096 },
-        { name: 'meeting_notes.txt', type: 'file', size: 1024 }
+        { name: 'meeting_notes.txt', type: 'file', size: 1024 },
+        { name: 'user_manual.pdf', type: 'file', size: 524288 },
+        { name: 'report.docx', type: 'file', size: 102400 }
       ]},
-      { name: 'programs', type: 'directory', size: 0, children: [
-        { name: 'cpu_scheduler.c', type: 'file', size: 8192 },
-        { name: 'memory_manager.c', type: 'file', size: 6144 },
-        { name: 'file_system.c', type: 'file', size: 5120 }
+      { name: 'Downloads', type: 'directory', size: 0, children: [
+        { name: 'installer.exe', type: 'file', size: 2097152 },
+        { name: 'archive.zip', type: 'file', size: 1048576 },
+        { name: 'image.png', type: 'file', size: 512000 }
       ]},
-      { name: 'config', type: 'directory', size: 0, children: [
-        { name: 'system.conf', type: 'file', size: 512 },
-        { name: 'network.conf', type: 'file', size: 256 },
-        { name: 'security_policy.json', type: 'file', size: 1536 }
+      { name: 'Pictures', type: 'directory', size: 0, children: [
+        { name: 'wallpaper.jpg', type: 'file', size: 2048000 },
+        { name: 'screenshot.png', type: 'file', size: 512000 },
+        { name: 'photo.jpeg', type: 'file', size: 1536000 },
+        { name: 'icon.svg', type: 'file', size: 8192 }
       ]},
-      { name: 'logs', type: 'directory', size: 0, children: [
-        { name: 'system_log.txt', type: 'file', size: 10240 },
-        { name: 'error_log.txt', type: 'file', size: 3072 },
-        { name: 'access_log.txt', type: 'file', size: 7168 }
+      { name: 'Music', type: 'directory', size: 0, children: [
+        { name: 'song1.mp3', type: 'file', size: 4194304 },
+        { name: 'song2.mp3', type: 'file', size: 3670016 },
+        { name: 'podcast.m4a', type: 'file', size: 5242880 },
+        { name: 'sound.wav', type: 'file', size: 2097152 }
       ]},
-      { name: 'temp', type: 'directory', size: 0, children: []},
+      { name: 'Videos', type: 'directory', size: 0, children: [
+        { name: 'tutorial.mp4', type: 'file', size: 52428800 },
+        { name: 'demo.avi', type: 'file', size: 41943040 },
+        { name: 'presentation.mkv', type: 'file', size: 31457280 }
+      ]},
+      { name: 'os', type: 'directory', size: 0, children: [] },
       { name: 'README.md', type: 'file', size: 2048 },
-      { name: 'LICENSE.txt', type: 'file', size: 1024 },
-      { name: 'user_manual.pdf', type: 'file', size: 524288 }
+      { name: 'LICENSE.txt', type: 'file', size: 1024 }
     ],
     stats: {
       total_inodes: 256,
-      used_inodes: 23,
+      used_inodes: 50,
       total_blocks: 1024,
-      used_blocks: 89,
+      used_blocks: 256,
       block_size: 4096
     }
   });
@@ -77,25 +89,33 @@ export const AppProvider = ({ children }) => {
     page_hits: 0,
     total_frames: 256,
     used_frames: 0,
-    sequences: []
+    sequences: [],
+    executionSteps: [],
+    stats: null
   });
 
   // Synchronization State
   const [synchronization, setSynchronization] = useState({
+    wasRunning: false,
     producerConsumer: {
       buffer: [],
       bufferSize: 10,
-      events: []
+      events: [],
+      produced: 0,
+      consumed: 0,
+      logs: []
     },
     diningPhilosophers: {
       philosophers: [
-        { id: 0, state: 'thinking' },
-        { id: 1, state: 'thinking' },
-        { id: 2, state: 'thinking' },
-        { id: 3, state: 'thinking' },
-        { id: 4, state: 'thinking' }
+        { id: 0, state: 'thinking', meals: 0 },
+        { id: 1, state: 'thinking', meals: 0 },
+        { id: 2, state: 'thinking', meals: 0 },
+        { id: 3, state: 'thinking', meals: 0 },
+        { id: 4, state: 'thinking', meals: 0 }
       ],
-      events: []
+      events: [],
+      forks: [true, true, true, true, true],
+      logs: []
     }
   });
 

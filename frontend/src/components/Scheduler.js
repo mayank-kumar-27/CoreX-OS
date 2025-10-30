@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
+import { useAppContext } from '../context/AppContext';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,10 +15,13 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function Scheduler() {
+  const { scheduler, setScheduler } = useAppContext();
   const [algorithm, setAlgorithm] = useState('fcfs');
-  const [processes, setProcesses] = useState([]);
-  const [ganttData, setGanttData] = useState([]);
-  const [stats, setStats] = useState({});
+  
+  // Use global state instead of local state
+  const processes = scheduler.processes || [];
+  const ganttData = scheduler.ganttChart || [];
+  const stats = scheduler.stats || {};
 
   const [newProcess, setNewProcess] = useState({
     name: '',
@@ -26,9 +30,7 @@ function Scheduler() {
     priority: ''
   });
 
-  useEffect(() => {
-    // Component mounted - scheduler is ready
-  }, []);
+  // No need for useEffect - data persists in global state
 
   const addProcess = () => {
     if (!newProcess.name || !newProcess.arrival_time || !newProcess.burst_time || !newProcess.priority) {
@@ -44,18 +46,26 @@ function Scheduler() {
       pid: processes.length + 1
     };
     
-    setProcesses([...processes, processToAdd]);
+    const updatedProcesses = [...processes, processToAdd];
     setNewProcess({ name: '', arrival_time: '', burst_time: '', priority: '' });
+    
+    // Update global scheduler state
+    setScheduler({
+      ...scheduler,
+      processes: updatedProcesses
+    });
   };
 
   const deleteProcess = (index) => {
     const updatedProcesses = processes.filter((_, i) => i !== index);
-    setProcesses(updatedProcesses);
-    // Also clear stats and gantt data if deleting processes
-    if (updatedProcesses.length === 0) {
-      setStats({});
-      setGanttData([]);
-    }
+    
+    // Update global scheduler state
+    setScheduler({
+      ...scheduler,
+      processes: updatedProcesses,
+      ganttChart: updatedProcesses.length === 0 ? [] : scheduler.ganttChart,
+      stats: updatedProcesses.length === 0 ? {} : scheduler.stats
+    });
   };
 
   const runScheduler = () => {
@@ -345,42 +355,59 @@ function Scheduler() {
     const avgTurnaroundTime = (totalTurnaroundTime / processCount).toFixed(2);
     const cpuUtilization = ((totalBurstTime / currentTime) * 100).toFixed(2);
     
-    setStats({
+    const calculatedStats = {
       algorithm: algorithm.toUpperCase(),
       avg_waiting_time: avgWaitingTime,
       avg_turnaround_time: avgTurnaroundTime,
       cpu_utilization: cpuUtilization,
       total_processes: processCount,
       total_time: currentTime
-    });
+    };
     
-    setGanttData(ganttChart);
+    // Update global scheduler state for Dashboard
+    setScheduler({
+      ...scheduler,
+      processes: processes,
+      ganttChart: ganttChart,
+      stats: calculatedStats,
+      isRunning: true
+    });
   };
 
   const ganttChartData = {
     labels: ganttData.map(entry => entry.process_name || `P${entry.pid}`),
     datasets: [{
+      label: 'Start Time',
+      data: ganttData.map(entry => entry.start_time),
+      backgroundColor: 'rgba(0, 0, 0, 0)', // Transparent - represents idle time before process starts
+      borderColor: 'rgba(0, 0, 0, 0)',
+      borderWidth: 0
+    }, {
       label: 'Execution Time',
       data: ganttData.map(entry => entry.end_time - entry.start_time),
       backgroundColor: ganttData.map((entry, index) => {
         const colors = [
-          'rgba(255, 164, 164, 0.8)',
-          'rgba(255, 189, 189, 0.8)',
-          'rgba(186, 223, 219, 0.8)',
-          'rgba(252, 249, 234, 0.8)',
-          'rgba(255, 164, 164, 0.6)',
-          'rgba(186, 223, 219, 0.6)',
+          'rgba(15, 76, 117, 0.9)',      // Dark Blue
+          'rgba(50, 130, 184, 0.9)',     // Medium Blue
+          'rgba(27, 38, 44, 0.9)',       // Dark Gray
+          'rgba(220, 53, 69, 0.9)',      // Red
+          'rgba(40, 167, 69, 0.9)',      // Green
+          'rgba(255, 193, 7, 0.9)',      // Amber
+          'rgba(111, 66, 193, 0.9)',     // Purple
+          'rgba(23, 162, 184, 0.9)',     // Cyan
         ];
         return colors[index % colors.length];
       }),
       borderColor: ganttData.map((entry, index) => {
         const colors = [
-          'rgba(255, 164, 164, 1)',
-          'rgba(255, 189, 189, 1)',
-          'rgba(186, 223, 219, 1)',
-          'rgba(252, 249, 234, 1)',
-          'rgba(255, 164, 164, 1)',
-          'rgba(186, 223, 219, 1)',
+          'rgba(15, 76, 117, 1)',        // Dark Blue
+          'rgba(50, 130, 184, 1)',       // Medium Blue
+          'rgba(27, 38, 44, 1)',         // Dark Gray
+          'rgba(220, 53, 69, 1)',        // Red
+          'rgba(40, 167, 69, 1)',        // Green
+          'rgba(255, 193, 7, 1)',        // Amber
+          'rgba(111, 66, 193, 1)',       // Purple
+          'rgba(23, 162, 184, 1)',       // Cyan
         ];
         return colors[index % colors.length];
       }),
@@ -417,13 +444,13 @@ function Scheduler() {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
-          ➕ Add New Process
+          Add New Process
         </h3>
         
         <Form style={{ marginBottom: '12px' }}>
           <Form.Group className="mb-1">
             <Form.Label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.75rem', marginBottom: '3px' }}>
-              📝 Process Name
+              Process Name
             </Form.Label>
             <Form.Control
               type="text"
@@ -445,7 +472,7 @@ function Scheduler() {
 
           <Form.Group className="mb-1">
             <Form.Label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.75rem', marginBottom: '3px' }}>
-              ⏰ Arrival Time (ms)
+              Arrival Time (ms)
             </Form.Label>
             <Form.Control
               type="number"
@@ -467,7 +494,7 @@ function Scheduler() {
 
           <Form.Group className="mb-1">
             <Form.Label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.75rem', marginBottom: '3px' }}>
-              ⚡ Burst Time (ms)
+              Burst Time (ms)
             </Form.Label>
             <Form.Control
               type="number"
@@ -489,7 +516,7 @@ function Scheduler() {
 
           <Form.Group className="mb-1">
             <Form.Label style={{ fontWeight: '600', color: '#4a5568', fontSize: '0.75rem', marginBottom: '3px' }}>
-              🎯 Priority (1=highest)
+              Priority (1=highest)
             </Form.Label>
             <Form.Control
               type="number"
@@ -534,7 +561,7 @@ function Scheduler() {
               e.target.style.boxShadow = '0 4px 15px rgba(50, 130, 184, 0.4)';
             }}
           >
-            ➕ Add Process to Queue
+            Add Process to Queue
           </Button>
 
           <Button 
@@ -546,12 +573,13 @@ function Scheduler() {
                 { name: 'P4', arrival_time: 3, burst_time: 5, priority: 2, pid: 4 }
               ];
               
-              // Clear stats and gantt data
-              setGanttData([]);
-              setStats({});
-              
-              // Load example processes directly to state
-              setProcesses(examples);
+              // Update global scheduler state with examples
+              setScheduler({
+                ...scheduler,
+                processes: examples,
+                ganttChart: [],
+                stats: {}
+              });
             }}
             style={{ 
               width: '100%', 
@@ -574,7 +602,7 @@ function Scheduler() {
               e.target.style.color = '#0F4C75';
             }}
           >
-            📝 Load Example Processes
+            Load Example Processes
           </Button>
         </Form>
 
@@ -595,7 +623,7 @@ function Scheduler() {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
-          ⚙️ Scheduling Algorithm
+          Scheduling Algorithm
         </h3>
         
         <Form.Group className="mb-1">
@@ -653,7 +681,7 @@ function Scheduler() {
             }
           }}
         >
-          🚀 Run Scheduler
+          Run Scheduler
         </Button>
         
         {processes.length === 0 && (
@@ -801,15 +829,15 @@ function Scheduler() {
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#4a5568', lineHeight: '1.8' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>⏰ Arrival:</span>
+                    <span>Arrival:</span>
                     <strong>{proc.arrival_time} ms</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>⚡ Burst:</span>
+                    <span>Burst:</span>
                     <strong>{proc.burst_time} ms</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>🎯 Priority:</span>
+                    <span>Priority:</span>
                     <strong>{proc.priority}</strong>
                   </div>
                 </div>
@@ -847,10 +875,10 @@ function Scheduler() {
             fontWeight: '700',
             flexShrink: 0
           }}>
-            📊 Statistics
+            Statistics
           </h3>
           
-          {!stats.algorithm ? (
+          {ganttData.length === 0 ? (
             <div style={{ 
               textAlign: 'center', 
               color: '#a0aec0',
@@ -860,7 +888,6 @@ function Scheduler() {
               justifyContent: 'center',
               alignItems: 'center'
             }}>
-              <div style={{ fontSize: '3rem', marginBottom: '15px' }}>📈</div>
               <div style={{ fontSize: '1rem', fontWeight: '500' }}>No Data Yet</div>
               <div style={{ fontSize: '0.85rem', marginTop: '8px' }}>
                 Add processes and run scheduler to see statistics
@@ -890,7 +917,7 @@ function Scheduler() {
               onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                <div style={{ fontSize: '0.75rem', opacity: 0.95, marginBottom: '8px', textAlign: 'center', fontWeight: '600' }}>⏱️ Avg Waiting</div>
+                <div style={{ fontSize: '0.75rem', opacity: 0.95, marginBottom: '8px', textAlign: 'center', fontWeight: '600' }}>Avg Waiting</div>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', textAlign: 'center', lineHeight: '1' }}>
                   {stats.avg_waiting_time}
                 </div>
@@ -914,7 +941,7 @@ function Scheduler() {
               onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                <div style={{ fontSize: '0.75rem', opacity: 0.95, marginBottom: '8px', textAlign: 'center', fontWeight: '600' }}>🔄 Avg Turnaround</div>
+                <div style={{ fontSize: '0.75rem', opacity: 0.95, marginBottom: '8px', textAlign: 'center', fontWeight: '600' }}>Avg Turnaround</div>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', textAlign: 'center', lineHeight: '1' }}>
                   {stats.avg_turnaround_time}
                 </div>
@@ -938,7 +965,7 @@ function Scheduler() {
               onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                <div style={{ fontSize: '0.75rem', opacity: 0.95, marginBottom: '8px', textAlign: 'center', fontWeight: '600' }}>🖥️ CPU Utilization</div>
+                <div style={{ fontSize: '0.75rem', opacity: 0.95, marginBottom: '8px', textAlign: 'center', fontWeight: '600' }}>CPU Utilization</div>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', textAlign: 'center', lineHeight: '1' }}>
                   {stats.cpu_utilization}
                 </div>
@@ -968,7 +995,7 @@ function Scheduler() {
             fontWeight: '700',
             flexShrink: 0
           }}>
-            📊 Gantt Chart
+            Gantt Chart
           </h3>
           
           {ganttData.length === 0 ? (
@@ -1017,10 +1044,25 @@ function Scheduler() {
                           weight: 'bold'
                         },
                         color: '#2d3748'
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function(context) {
+                            if (context.datasetIndex === 0) return null; // Hide tooltip for transparent "Start Time" bars
+                            const entry = ganttData[context.dataIndex];
+                            return [
+                              `Process: ${entry.process_name || 'P' + entry.pid}`,
+                              `Start: ${entry.start_time} ms`,
+                              `End: ${entry.end_time} ms`,
+                              `Duration: ${entry.end_time - entry.start_time} ms`
+                            ];
+                          }
+                        }
                       }
                     },
                     scales: {
                       x: {
+                        stacked: true,
                         title: {
                           display: true,
                           text: 'Time (ms)',
@@ -1028,15 +1070,26 @@ function Scheduler() {
                             size: 12,
                             weight: 'bold'
                           }
+                        },
+                        ticks: {
+                          font: {
+                            size: 11
+                          }
                         }
                       },
                       y: {
+                        stacked: true,
                         title: {
                           display: true,
                           text: 'Processes',
                           font: {
                             size: 12,
                             weight: 'bold'
+                          }
+                        },
+                        ticks: {
+                          font: {
+                            size: 11
                           }
                         }
                       }

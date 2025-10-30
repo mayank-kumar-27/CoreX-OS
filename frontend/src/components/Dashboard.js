@@ -24,7 +24,7 @@ function Dashboard() {
         textAlign: 'center',
         padding: '0'
       }}>
-        🖥️ CoreX OS Dashboard
+        CoreX OS Dashboard
       </h1>
       
       {/* Main Grid Layout */}
@@ -50,7 +50,7 @@ function Dashboard() {
           justifyContent: 'center'
         }}>
           <div style={{ fontSize: '0.7rem', marginBottom: '4px', opacity: 0.9 }}>
-            ⚡ CPU Utilization
+            CPU Utilization
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>
             {scheduler.stats.cpu_utilization || 0}%
@@ -70,7 +70,7 @@ function Dashboard() {
           justifyContent: 'center'
         }}>
           <div style={{ fontSize: '0.7rem', marginBottom: '4px', opacity: 0.9 }}>
-            💾 Memory Hit Ratio
+            Memory Hit Ratio
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>
             {memory.page_hits && (memory.page_faults + memory.page_hits) > 0
@@ -92,7 +92,7 @@ function Dashboard() {
           justifyContent: 'center'
         }}>
           <div style={{ fontSize: '0.7rem', marginBottom: '4px', opacity: 0.9 }}>
-            📁 Storage Used
+            Storage Used
           </div>
           <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
             {fileSystem.stats.used_blocks || 0} / {fileSystem.stats.total_blocks || 0}
@@ -120,7 +120,7 @@ function Dashboard() {
             margin: '0 0 10px 0',
             flexShrink: 0
           }}>
-            ⚙️ CPU Scheduler
+            CPU Scheduler
           </h3>
           <div style={{ 
             flex: 1,
@@ -197,10 +197,10 @@ function Dashboard() {
                 justifyContent: 'center'
               }}>
                 <div style={{ fontSize: '0.75rem', color: '#2d3748', marginBottom: '4px', fontWeight: '700' }}>
-                  Avg Response
+                  CPU Utilization
                 </div>
                 <div style={{ fontSize: '1.8rem', fontWeight: '900', color: '#0F4C75' }}>
-                  {scheduler.stats.avg_response_time || 0}<span style={{ fontSize: '0.85rem' }}> ms</span>
+                  {scheduler.stats.cpu_utilization || 0}<span style={{ fontSize: '0.85rem' }}> %</span>
                 </div>
               </div>
             </div>
@@ -214,7 +214,7 @@ function Dashboard() {
               borderLeft: '3px solid #3282B8',
               flexShrink: 0
             }}>
-              <strong>📊 Info:</strong> Manages process execution using FCFS, SJF, Round Robin, and Priority algorithms for optimal CPU utilization.
+              <strong>Info:</strong> Manages process execution using FCFS, SJF, Round Robin, and Priority algorithms for optimal CPU utilization.
             </div>
           </div>
         </div>
@@ -334,7 +334,7 @@ function Dashboard() {
               borderLeft: '3px solid #38a169',
               flexShrink: 0
             }}>
-              <strong>💡 Info:</strong> Implements FIFO, LRU, and Optimal page replacement algorithms with {memory.total_frames || 256} frames for efficient memory usage.
+              <strong>Info:</strong> Implements FIFO, LRU, and Optimal page replacement algorithms with {memory.total_frames || 256} frames for efficient memory usage.
             </div>
           </div>
         </div>
@@ -360,7 +360,7 @@ function Dashboard() {
             margin: '0 0 10px 0',
             flexShrink: 0
           }}>
-            📁 File System Status
+            File System Status
           </h3>
           <div style={{ 
             flex: 1,
@@ -454,7 +454,7 @@ function Dashboard() {
               borderLeft: '3px solid #0F4C75',
               flexShrink: 0
             }}>
-              <strong>🗂️ Info:</strong> Virtual File System with hierarchical directory structure supporting file creation, deletion, and navigation operations.
+              <strong>Info:</strong> Virtual File System with hierarchical directory structure supporting file creation, deletion, and navigation operations.
             </div>
           </div>
         </div>

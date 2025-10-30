@@ -1,65 +1,138 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form } from 'react-bootstrap';
+import { useAppContext } from '../context/AppContext';
 
 function Synchronization() {
+  const { synchronization, setSynchronization } = useAppContext();
+  
   const [activeDemo, setActiveDemo] = useState('producer-consumer');
   const [isRunning, setIsRunning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   
   // Producer-Consumer state
   const [numProducers, setNumProducers] = useState(2);
   const [numConsumers, setNumConsumers] = useState(2);
   const [bufferSize, setBufferSize] = useState(5);
-  const [buffer, setBuffer] = useState([]);
-  const [produced, setProduced] = useState(0);
-  const [consumed, setConsumed] = useState(0);
-  const [logs, setLogs] = useState([]);
   
-  // Dining Philosophers state
-  const [philosophers, setPhilosophers] = useState([
+  // Read from global state instead of local state
+  const buffer = synchronization.producerConsumer.buffer || [];
+  const logs = synchronization.producerConsumer.logs || [];
+  const produced = synchronization.producerConsumer.produced || 0;
+  const consumed = synchronization.producerConsumer.consumed || 0;
+  
+  // Dining Philosophers state - read from global
+  const philosophers = synchronization.diningPhilosophers.philosophers || [
     { id: 0, state: 'thinking', meals: 0 },
     { id: 1, state: 'thinking', meals: 0 },
     { id: 2, state: 'thinking', meals: 0 },
     { id: 3, state: 'thinking', meals: 0 },
     { id: 4, state: 'thinking', meals: 0 }
-  ]);
-  const [forks, setForks] = useState([true, true, true, true, true]); // true = available
-  const [philosopherLogs, setPhilosopherLogs] = useState([]);
+  ];
+  const forks = synchronization.diningPhilosophers.forks || [true, true, true, true, true];
+  const philosopherLogs = synchronization.diningPhilosophers.logs || [];
+
+  // Pause simulation when component unmounts (tab switch)
+  useEffect(() => {
+    // Check if there was a running simulation when returning to tab
+    if (synchronization.wasRunning && !isRunning) {
+      setIsPaused(true);
+    }
+
+    return () => {
+      // Pause simulation when leaving tab
+      if (isRunning) {
+        if (window.pcInterval) {
+          clearInterval(window.pcInterval);
+          window.pcInterval = null;
+        }
+        if (window.dpInterval) {
+          clearInterval(window.dpInterval);
+          window.dpInterval = null;
+        }
+        // Mark that simulation was running
+        setSynchronization(prev => ({
+          ...prev,
+          wasRunning: true
+        }));
+      }
+    };
+  }, [isRunning]);
 
   const addLog = (message) => {
-    setLogs(prev => [...prev.slice(-9), { time: new Date().toLocaleTimeString(), message }]);
+    setSynchronization(prev => ({
+      ...prev,
+      producerConsumer: {
+        ...prev.producerConsumer,
+        logs: [...(prev.producerConsumer.logs || []).slice(-9), { time: new Date().toLocaleTimeString(), message }]
+      }
+    }));
   };
 
   const addPhilosopherLog = (message) => {
-    setPhilosopherLogs(prev => [...prev.slice(-9), { time: new Date().toLocaleTimeString(), message }]);
+    setSynchronization(prev => ({
+      ...prev,
+      diningPhilosophers: {
+        ...prev.diningPhilosophers,
+        logs: [...(prev.diningPhilosophers.logs || []).slice(-9), { time: new Date().toLocaleTimeString(), message }]
+      }
+    }));
   };
 
   const startProducerConsumer = () => {
     setIsRunning(true);
-    setBuffer([]);
-    setProduced(0);
-    setConsumed(0);
-    setLogs([]);
-    addLog('🚀 Producer-Consumer simulation started');
+    
+    // Reset producer-consumer state
+    setSynchronization(prev => ({
+      ...prev,
+      producerConsumer: {
+        ...prev.producerConsumer,
+        buffer: [],
+        produced: 0,
+        consumed: 0,
+        logs: [{ time: new Date().toLocaleTimeString(), message: '🚀 Producer-Consumer simulation started' }]
+      }
+    }));
     
     // Simulate producer-consumer
     const interval = setInterval(() => {
-      // Random producer action
-      if (Math.random() > 0.5 && buffer.length < bufferSize) {
-        const item = Math.floor(Math.random() * 100);
-        setBuffer(prev => [...prev, item]);
-        setProduced(prev => prev + 1);
-        addLog(`✅ Producer: Added item ${item} to buffer`);
-      }
-      
-      // Random consumer action
-      if (Math.random() > 0.5 && buffer.length > 0) {
-        setBuffer(prev => {
-          const item = prev[0];
-          addLog(`🔽 Consumer: Removed item ${item} from buffer`);
-          setConsumed(c => c + 1);
-          return prev.slice(1);
-        });
-      }
+      setSynchronization(prev => {
+        const currentBuffer = prev.producerConsumer.buffer || [];
+        const currentProduced = prev.producerConsumer.produced || 0;
+        const currentConsumed = prev.producerConsumer.consumed || 0;
+        const currentLogs = prev.producerConsumer.logs || [];
+        
+        let newBuffer = [...currentBuffer];
+        let newProduced = currentProduced;
+        let newConsumed = currentConsumed;
+        let newLogs = [...currentLogs];
+        
+        // Random producer action
+        if (Math.random() > 0.5 && newBuffer.length < bufferSize) {
+          const item = Math.floor(Math.random() * 100);
+          newBuffer.push(item);
+          newProduced++;
+          newLogs = [...newLogs.slice(-9), { time: new Date().toLocaleTimeString(), message: `✅ Producer: Added item ${item} to buffer` }];
+        }
+        
+        // Random consumer action
+        if (Math.random() > 0.5 && newBuffer.length > 0) {
+          const item = newBuffer[0];
+          newBuffer = newBuffer.slice(1);
+          newConsumed++;
+          newLogs = [...newLogs.slice(-9), { time: new Date().toLocaleTimeString(), message: `🔽 Consumer: Removed item ${item} from buffer` }];
+        }
+        
+        return {
+          ...prev,
+          producerConsumer: {
+            ...prev.producerConsumer,
+            buffer: newBuffer,
+            produced: newProduced,
+            consumed: newConsumed,
+            logs: newLogs
+          }
+        };
+      });
     }, 1000);
 
     // Store interval ID for cleanup
@@ -68,30 +141,99 @@ function Synchronization() {
 
   const stopProducerConsumer = () => {
     setIsRunning(false);
+    setIsPaused(false);
     if (window.pcInterval) {
       clearInterval(window.pcInterval);
       window.pcInterval = null;
     }
+    setSynchronization(prev => ({
+      ...prev,
+      wasRunning: false
+    }));
     addLog('⏹️ Simulation stopped');
+  };
+
+  const resumeProducerConsumer = () => {
+    setIsRunning(true);
+    setIsPaused(false);
+    setSynchronization(prev => ({
+      ...prev,
+      wasRunning: false
+    }));
+    
+    const interval = setInterval(() => {
+      setSynchronization(prev => {
+        const currentBuffer = prev.producerConsumer.buffer || [];
+        const currentProduced = prev.producerConsumer.produced || 0;
+        const currentConsumed = prev.producerConsumer.consumed || 0;
+        const currentLogs = prev.producerConsumer.logs || [];
+        
+        let newBuffer = [...currentBuffer];
+        let newProduced = currentProduced;
+        let newConsumed = currentConsumed;
+        let newLogs = [...currentLogs];
+        
+        // Random producer action
+        if (Math.random() > 0.5 && newBuffer.length < bufferSize) {
+          const item = Math.floor(Math.random() * 100);
+          newBuffer.push(item);
+          newProduced++;
+          newLogs = [...newLogs.slice(-9), { time: new Date().toLocaleTimeString(), message: `✅ Producer: Added item ${item} to buffer` }];
+        }
+        
+        // Random consumer action
+        if (Math.random() > 0.5 && newBuffer.length > 0) {
+          const item = newBuffer[0];
+          newBuffer = newBuffer.slice(1);
+          newConsumed++;
+          newLogs = [...newLogs.slice(-9), { time: new Date().toLocaleTimeString(), message: `🔽 Consumer: Removed item ${item} from buffer` }];
+        }
+        
+        return {
+          ...prev,
+          producerConsumer: {
+            ...prev.producerConsumer,
+            buffer: newBuffer,
+            produced: newProduced,
+            consumed: newConsumed,
+            logs: newLogs
+          }
+        };
+      });
+    }, 1000);
+
+    window.pcInterval = interval;
   };
 
   const startDiningPhilosophers = () => {
     setIsRunning(true);
-    setPhilosophers([
-      { id: 0, state: 'thinking', meals: 0 },
-      { id: 1, state: 'thinking', meals: 0 },
-      { id: 2, state: 'thinking', meals: 0 },
-      { id: 3, state: 'thinking', meals: 0 },
-      { id: 4, state: 'thinking', meals: 0 }
-    ]);
-    setForks([true, true, true, true, true]);
-    setPhilosopherLogs([]);
-    addPhilosopherLog('🚀 Dining Philosophers simulation started');
+    
+    // Reset dining philosophers state
+    setSynchronization(prev => ({
+      ...prev,
+      diningPhilosophers: {
+        ...prev.diningPhilosophers,
+        philosophers: [
+          { id: 0, state: 'thinking', meals: 0 },
+          { id: 1, state: 'thinking', meals: 0 },
+          { id: 2, state: 'thinking', meals: 0 },
+          { id: 3, state: 'thinking', meals: 0 },
+          { id: 4, state: 'thinking', meals: 0 }
+        ],
+        forks: [true, true, true, true, true],
+        logs: [{ time: new Date().toLocaleTimeString(), message: '🚀 Dining Philosophers simulation started' }]
+      }
+    }));
 
     const interval = setInterval(() => {
-      setPhilosophers(prevPhil => {
+      setSynchronization(prev => {
+        const prevPhil = prev.diningPhilosophers.philosophers || [];
+        const prevForks = prev.diningPhilosophers.forks || [true, true, true, true, true];
+        const prevLogs = prev.diningPhilosophers.logs || [];
+        
         const newPhil = [...prevPhil];
-        const availableForks = [...forks];
+        const availableForks = [...prevForks];
+        let newLogs = [...prevLogs];
         
         newPhil.forEach((p, i) => {
           const leftFork = i;
@@ -103,22 +245,29 @@ function Synchronization() {
               newPhil[i] = { ...p, state: 'eating' };
               availableForks[leftFork] = false;
               availableForks[rightFork] = false;
-              addPhilosopherLog(`🍴 Philosopher ${i} picked up forks ${leftFork} and ${rightFork}`);
+              newLogs = [...newLogs.slice(-9), { time: new Date().toLocaleTimeString(), message: `🍴 Philosopher ${i} picked up forks ${leftFork} and ${rightFork}` }];
             } else {
               newPhil[i] = { ...p, state: 'hungry' };
-              addPhilosopherLog(`⏳ Philosopher ${i} is hungry, waiting for forks`);
+              newLogs = [...newLogs.slice(-9), { time: new Date().toLocaleTimeString(), message: `⏳ Philosopher ${i} is hungry, waiting for forks` }];
             }
           } else if (p.state === 'eating' && Math.random() > 0.5) {
             // Finish eating
             newPhil[i] = { ...p, state: 'thinking', meals: p.meals + 1 };
             availableForks[leftFork] = true;
             availableForks[rightFork] = true;
-            addPhilosopherLog(`✅ Philosopher ${i} finished eating (${p.meals + 1} meals)`);
+            newLogs = [...newLogs.slice(-9), { time: new Date().toLocaleTimeString(), message: `✅ Philosopher ${i} finished eating (${p.meals + 1} meals)` }];
           }
         });
         
-        setForks(availableForks);
-        return newPhil;
+        return {
+          ...prev,
+          diningPhilosophers: {
+            ...prev.diningPhilosophers,
+            philosophers: newPhil,
+            forks: availableForks,
+            logs: newLogs
+          }
+        };
       });
     }, 1500);
 
@@ -127,11 +276,73 @@ function Synchronization() {
 
   const stopDiningPhilosophers = () => {
     setIsRunning(false);
+    setIsPaused(false);
     if (window.dpInterval) {
       clearInterval(window.dpInterval);
       window.dpInterval = null;
     }
+    setSynchronization(prev => ({
+      ...prev,
+      wasRunning: false
+    }));
     addPhilosopherLog('⏹️ Simulation stopped');
+  };
+
+  const resumeDiningPhilosophers = () => {
+    setIsRunning(true);
+    setIsPaused(false);
+    setSynchronization(prev => ({
+      ...prev,
+      wasRunning: false
+    }));
+
+    const interval = setInterval(() => {
+      setSynchronization(prev => {
+        const prevPhil = prev.diningPhilosophers.philosophers || [];
+        const prevForks = prev.diningPhilosophers.forks || [true, true, true, true, true];
+        const prevLogs = prev.diningPhilosophers.logs || [];
+        
+        const newPhil = [...prevPhil];
+        const availableForks = [...prevForks];
+        let newLogs = [...prevLogs];
+        
+        newPhil.forEach((p, i) => {
+          const leftFork = i;
+          const rightFork = (i + 1) % 5;
+          
+          if (p.state === 'thinking' && Math.random() > 0.6) {
+            // Try to pick up forks
+            if (availableForks[leftFork] && availableForks[rightFork]) {
+              newPhil[i] = { ...p, state: 'eating' };
+              availableForks[leftFork] = false;
+              availableForks[rightFork] = false;
+              newLogs = [...newLogs.slice(-9), { time: new Date().toLocaleTimeString(), message: `🍴 Philosopher ${i} picked up forks ${leftFork} and ${rightFork}` }];
+            } else {
+              newPhil[i] = { ...p, state: 'hungry' };
+              newLogs = [...newLogs.slice(-9), { time: new Date().toLocaleTimeString(), message: `⏳ Philosopher ${i} is hungry, waiting for forks` }];
+            }
+          } else if (p.state === 'eating' && Math.random() > 0.5) {
+            // Finish eating
+            newPhil[i] = { ...p, state: 'thinking', meals: p.meals + 1 };
+            availableForks[leftFork] = true;
+            availableForks[rightFork] = true;
+            newLogs = [...newLogs.slice(-9), { time: new Date().toLocaleTimeString(), message: `✅ Philosopher ${i} finished eating (${p.meals + 1} meals)` }];
+          }
+        });
+        
+        return {
+          ...prev,
+          diningPhilosophers: {
+            ...prev.diningPhilosophers,
+            philosophers: newPhil,
+            forks: availableForks,
+            logs: newLogs
+          }
+        };
+      });
+    }, 1500);
+
+    window.dpInterval = interval;
   };
 
   useEffect(() => {
@@ -195,7 +406,7 @@ function Synchronization() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            🔄 Synchronization
+            Synchronization
           </h2>
 
           <div style={{ 
@@ -224,8 +435,8 @@ function Synchronization() {
                 fontWeight: 'bold'
               }}
             >
-              <option value="producer-consumer">🏭 Producer-Consumer Problem</option>
-              <option value="dining-philosophers">🍽️ Dining Philosophers Problem</option>
+              <option value="producer-consumer">Producer-Consumer Problem</option>
+              <option value="dining-philosophers">Dining Philosophers Problem</option>
             </Form.Select>
           </Form.Group>
 
@@ -295,6 +506,8 @@ function Synchronization() {
             onClick={() => {
               if (isRunning) {
                 activeDemo === 'producer-consumer' ? stopProducerConsumer() : stopDiningPhilosophers();
+              } else if (isPaused) {
+                activeDemo === 'producer-consumer' ? resumeProducerConsumer() : resumeDiningPhilosophers();
               } else {
                 activeDemo === 'producer-consumer' ? startProducerConsumer() : startDiningPhilosophers();
               }
@@ -303,6 +516,8 @@ function Synchronization() {
               width: '100%', 
               background: isRunning 
                 ? 'linear-gradient(135deg, #e53e3e 0%, #c53030 100%)'
+                : isPaused
+                ? 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)'
                 : 'linear-gradient(135deg, #3282B8 0%, #0F4C75 100%)',
               border: 'none',
               borderRadius: '8px',
@@ -315,26 +530,38 @@ function Synchronization() {
               marginBottom: '8px'
             }}
           >
-            {isRunning ? '⏹️ Stop Simulation' : '▶️ Start Simulation'}
+            {isRunning ? 'Stop Simulation' : isPaused ? 'Resume Simulation' : 'Start Simulation'}
           </Button>
 
           <Button 
             onClick={() => {
               if (activeDemo === 'producer-consumer') {
-                setBuffer([]);
-                setProduced(0);
-                setConsumed(0);
-                setLogs([]);
+                setSynchronization(prev => ({
+                  ...prev,
+                  producerConsumer: {
+                    ...prev.producerConsumer,
+                    buffer: [],
+                    produced: 0,
+                    consumed: 0,
+                    logs: []
+                  }
+                }));
               } else {
-                setPhilosophers([
-                  { id: 0, state: 'thinking', meals: 0 },
-                  { id: 1, state: 'thinking', meals: 0 },
-                  { id: 2, state: 'thinking', meals: 0 },
-                  { id: 3, state: 'thinking', meals: 0 },
-                  { id: 4, state: 'thinking', meals: 0 }
-                ]);
-                setForks([true, true, true, true, true]);
-                setPhilosopherLogs([]);
+                setSynchronization(prev => ({
+                  ...prev,
+                  diningPhilosophers: {
+                    ...prev.diningPhilosophers,
+                    philosophers: [
+                      { id: 0, state: 'thinking', meals: 0 },
+                      { id: 1, state: 'thinking', meals: 0 },
+                      { id: 2, state: 'thinking', meals: 0 },
+                      { id: 3, state: 'thinking', meals: 0 },
+                      { id: 4, state: 'thinking', meals: 0 }
+                    ],
+                    forks: [true, true, true, true, true],
+                    logs: []
+                  }
+                }));
               }
             }}
             style={{ 
@@ -349,7 +576,7 @@ function Synchronization() {
               transition: 'all 0.3s'
             }}
           >
-            🔄 Reset
+            Reset
           </Button>
         </div>
 
@@ -372,7 +599,7 @@ function Synchronization() {
             marginBottom: '8px',
             flexShrink: 0
           }}>
-            📊 Statistics
+            Statistics
           </h3>
 
           <div style={{ 
@@ -489,7 +716,7 @@ function Synchronization() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            {activeDemo === 'producer-consumer' ? '🏭 Buffer Visualization' : '🍽️ Philosophers Table'}
+            {activeDemo === 'producer-consumer' ? 'Buffer Visualization' : 'Philosophers Table'}
           </h3>
 
           <div style={{ 

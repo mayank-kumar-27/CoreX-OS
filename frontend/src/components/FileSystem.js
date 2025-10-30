@@ -68,8 +68,55 @@ function FileSystem() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const getIcon = (type) => {
-    return type === 'directory' ? '📁' : '📄';
+  const getIcon = (file) => {
+    if (file.type === 'directory') {
+      // Special folder icons
+      if (file.name === 'Desktop') return '🖥️';
+      if (file.name === 'Downloads') return '⬇️';
+      if (file.name === 'Documents') return '📚';
+      if (file.name === 'Pictures') return '🖼️';
+      if (file.name === 'Music') return '🎵';
+      if (file.name === 'Videos') return '🎬';
+      return '📁';
+    }
+    
+    // File type icons based on extension
+    const ext = file.name.split('.').pop().toLowerCase();
+    
+    // Documents
+    if (ext === 'pdf') return '📕';
+    if (ext === 'txt') return '📝';
+    if (['md', 'readme'].includes(ext) || file.name.toLowerCase() === 'readme.md') return '📘';
+    if (['doc', 'docx'].includes(ext)) return '📄';
+    if (['xls', 'xlsx'].includes(ext)) return '📊';
+    if (['ppt', 'pptx'].includes(ext)) return '📽️';
+    
+    // Images
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(ext)) return '🖼️';
+    if (['ico', 'icon'].includes(ext)) return '🎨';
+    
+    // Audio
+    if (['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'].includes(ext)) return '🎵';
+    
+    // Video
+    if (['mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv', 'webm'].includes(ext)) return '🎬';
+    
+    // Code files
+    if (['js', 'jsx', 'ts', 'tsx'].includes(ext)) return '📜';
+    if (['py'].includes(ext)) return '🐍';
+    if (['java'].includes(ext)) return '☕';
+    if (['cpp', 'c', 'h'].includes(ext)) return '⚙️';
+    if (['html', 'css'].includes(ext)) return '🌐';
+    if (['json', 'xml', 'yaml', 'yml'].includes(ext)) return '�';
+    
+    // Archives
+    if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return '🗜️';
+    
+    // Executables
+    if (['exe', 'app', 'dmg'].includes(ext)) return '⚡';
+    
+    // Default
+    return '📄';
   };
 
   return (
@@ -108,7 +155,7 @@ function FileSystem() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            📂 File System
+            File System
           </h2>
 
           <div style={{ 
@@ -124,7 +171,7 @@ function FileSystem() {
             color: '#2d3748',
             marginBottom: '10px'
           }}>
-            🛠️ Operations
+            Operations
           </h3>
 
           <Button 
@@ -151,7 +198,7 @@ function FileSystem() {
               e.target.style.boxShadow = '0 4px 15px rgba(50, 130, 184, 0.4)';
             }}
           >
-            📄 New File
+            New File
           </Button>
 
           <Button 
@@ -178,7 +225,7 @@ function FileSystem() {
               e.target.style.boxShadow = '0 4px 15px rgba(50, 130, 184, 0.4)';
             }}
           >
-            📁 New Directory
+            New Directory
           </Button>
 
           <Button 
@@ -206,7 +253,7 @@ function FileSystem() {
               e.target.style.color = '#0F4C75';
             }}
           >
-            🔄 Refresh
+            Refresh
           </Button>
         </div>
 
@@ -226,7 +273,7 @@ function FileSystem() {
             color: '#2d3748',
             marginBottom: '10px'
           }}>
-            📊 Statistics
+            Statistics
           </h3>
 
           <div style={{ fontSize: '0.75rem', color: '#2d3748' }}>
@@ -354,7 +401,7 @@ function FileSystem() {
                 cursor: currentPath === '/' ? 'not-allowed' : 'pointer'
               }}
             >
-              ⬆️ Up
+              Up
             </Button>
             
             <div style={{ 
@@ -368,7 +415,7 @@ function FileSystem() {
               color: '#0F4C75',
               fontFamily: 'monospace'
             }}>
-              📍 {currentPath}
+              {currentPath}
             </div>
           </div>
         </div>
@@ -393,7 +440,7 @@ function FileSystem() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            📂 Directory Contents
+            Directory Contents
           </h3>
 
           <div style={{ flex: 1, overflowY: 'auto' }} className="custom-scrollbar">
@@ -410,98 +457,141 @@ function FileSystem() {
                 Empty directory
               </div>
             ) : (
-              <table style={{ 
-                width: '100%', 
-                borderCollapse: 'collapse',
-                fontSize: '0.85rem'
+              <div style={{ 
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                gap: '15px',
+                padding: '10px'
               }}>
-                <thead>
-                  <tr style={{ 
-                    background: 'linear-gradient(135deg, #3282B8 0%, #0F4C75 100%)',
-                    color: 'white'
-                  }}>
-                    <th style={{ padding: '10px', textAlign: 'left', border: '1px solid #0F4C75' }}>Name</th>
-                    <th style={{ padding: '10px', textAlign: 'center', border: '1px solid #0F4C75', width: '100px' }}>Type</th>
-                    <th style={{ padding: '10px', textAlign: 'right', border: '1px solid #0F4C75', width: '100px' }}>Size</th>
-                    <th style={{ padding: '10px', textAlign: 'center', border: '1px solid #0F4C75', width: '150px' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {files.map((file, idx) => (
-                    <tr key={idx} style={{ 
-                      background: idx % 2 === 0 ? 'rgba(187, 225, 250, 0.2)' : 'rgba(255, 255, 255, 0.5)',
-                      transition: 'background 0.2s'
+                {files.map((file, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      padding: '15px',
+                      background: 'rgba(187, 225, 250, 0.3)',
+                      borderRadius: '12px',
+                      border: '2px solid #BBE1FA',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s',
+                      position: 'relative'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(50, 130, 184, 0.2)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = idx % 2 === 0 ? 'rgba(187, 225, 250, 0.2)' : 'rgba(255, 255, 255, 0.5)'}
-                    >
-                      <td style={{ 
-                        padding: '10px', 
-                        border: '1px solid #BBE1FA',
-                        cursor: file.type === 'directory' ? 'pointer' : 'default',
-                        fontWeight: file.type === 'directory' ? 'bold' : 'normal'
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(50, 130, 184, 0.3)';
+                      e.currentTarget.style.transform = 'translateY(-5px)';
+                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(50, 130, 184, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(187, 225, 250, 0.3)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                    onClick={() => file.type === 'directory' && navigateToDir(file.name)}
+                    onDoubleClick={() => file.type === 'file' && viewFile(file.name)}
+                  >
+                    {/* Delete button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(file.name);
                       }}
-                      onClick={() => file.type === 'directory' && navigateToDir(file.name)}
+                      style={{
+                        position: 'absolute',
+                        top: '5px',
+                        right: '5px',
+                        background: '#e53e3e',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '24px',
+                        height: '24px',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.transform = 'scale(1.15)';
+                        e.target.style.boxShadow = '0 3px 8px rgba(0,0,0,0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.transform = 'scale(1)';
+                        e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                      }}
+                      title="Delete"
+                    >
+                      ×
+                    </button>
+
+                    {/* Icon */}
+                    <div style={{
+                      fontSize: '3.5rem',
+                      marginBottom: '8px'
+                    }}>
+                      {getIcon(file)}
+                    </div>
+
+                    {/* File name */}
+                    <div style={{
+                      fontSize: '0.8rem',
+                      fontWeight: file.type === 'directory' ? 'bold' : 'normal',
+                      color: '#0F4C75',
+                      textAlign: 'center',
+                      wordBreak: 'break-word',
+                      marginBottom: '5px'
+                    }}>
+                      {file.name}
+                    </div>
+
+                    {/* File type and size */}
+                    <div style={{
+                      fontSize: '0.65rem',
+                      color: '#718096',
+                      textAlign: 'center'
+                    }}>
+                      {file.type === 'file' ? formatSize(file.size) : 'Folder'}
+                    </div>
+
+                    {/* View button for files */}
+                    {file.type === 'file' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          viewFile(file.name);
+                        }}
+                        style={{
+                          marginTop: '8px',
+                          background: 'linear-gradient(135deg, #3282B8 0%, #0F4C75 100%)',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '5px 12px',
+                          fontSize: '0.7rem',
+                          color: 'white',
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.transform = 'scale(1.05)';
+                          e.target.style.boxShadow = '0 4px 10px rgba(50, 130, 184, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'scale(1)';
+                          e.target.style.boxShadow = 'none';
+                        }}
                       >
-                        {getIcon(file.type)} {file.name}
-                      </td>
-                      <td style={{ 
-                        padding: '10px', 
-                        border: '1px solid #BBE1FA',
-                        textAlign: 'center',
-                        fontSize: '0.75rem',
-                        color: file.type === 'directory' ? '#3282B8' : '#718096'
-                      }}>
-                        {file.type}
-                      </td>
-                      <td style={{ 
-                        padding: '10px', 
-                        border: '1px solid #BBE1FA',
-                        textAlign: 'right',
-                        fontFamily: 'monospace',
-                        color: '#0F4C75'
-                      }}>
-                        {formatSize(file.size)}
-                      </td>
-                      <td style={{ 
-                        padding: '10px', 
-                        border: '1px solid #BBE1FA',
-                        textAlign: 'center'
-                      }}>
-                        {file.type === 'file' && (
-                          <Button 
-                            onClick={() => viewFile(file.name)}
-                            style={{ 
-                              background: '#3282B8',
-                              border: 'none',
-                              borderRadius: '6px',
-                              padding: '4px 10px',
-                              fontSize: '0.75rem',
-                              color: 'white',
-                              marginRight: '5px'
-                            }}
-                          >
-                            👁️ View
-                          </Button>
-                        )}
-                        <Button 
-                          onClick={() => handleDelete(file.name)}
-                          style={{ 
-                            background: '#e53e3e',
-                            border: 'none',
-                            borderRadius: '6px',
-                            padding: '4px 10px',
-                            fontSize: '0.75rem',
-                            color: 'white'
-                          }}
-                        >
-                          🗑️ Delete
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        View
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -552,7 +642,7 @@ function FileSystem() {
           color: 'white'
         }}>
           <Modal.Title>
-            {createType === 'file' ? '📄 New File' : '📁 New Directory'}
+            {createType === 'file' ? 'New File' : 'New Directory'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>

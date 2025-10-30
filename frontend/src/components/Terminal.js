@@ -87,7 +87,7 @@ function Terminal() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ color: '#BBE1FA', fontSize: '1.1rem', fontWeight: '700' }}>
-              💻 CoreX OS Terminal
+              CoreX OS Terminal
             </span>
           </div>
           {loading && (
@@ -170,7 +170,7 @@ function Terminal() {
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          <span>💡 Type "help" for available commands</span>
+          <span>Type "help" for available commands</span>
           <span style={{ opacity: 0.7 }}>Press Enter to execute</span>
         </div>
       </div>

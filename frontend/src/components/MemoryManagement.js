@@ -7,14 +7,10 @@ function MemoryManagement() {
   
   const [numFrames, setNumFrames] = useState(3);
   const [referenceString, setReferenceString] = useState('');
-  const [executionSteps, setExecutionSteps] = useState([]);
-  const [localStats, setLocalStats] = useState(null);
-
-  useEffect(() => {
-    // Clear memory data on mount
-    setExecutionSteps([]);
-    setLocalStats(null);
-  }, []);
+  
+  // Read from global state instead of local state
+  const executionSteps = memory.executionSteps || [];
+  const localStats = memory.stats || null;
 
   const simulatePageReplacement = () => {
     if (!referenceString.trim()) {
@@ -113,8 +109,6 @@ function MemoryManagement() {
       });
     });
 
-    setExecutionSteps(steps);
-    
     const hitRatio = pages.length > 0 ? ((hits / pages.length) * 100).toFixed(2) : '0.00';
     const faultRatio = pages.length > 0 ? ((faults / pages.length) * 100).toFixed(2) : '0.00';
 
@@ -128,11 +122,11 @@ function MemoryManagement() {
       frames: numFrames
     };
     
-    setLocalStats(calculatedStats);
-    
     // Update global memory state for Dashboard
     setMemory({
       ...memory,
+      executionSteps: steps,
+      stats: calculatedStats,
       page_faults: faults,
       page_hits: hits,
       used_frames: frameArray.filter(f => f !== null).length,
@@ -142,8 +136,11 @@ function MemoryManagement() {
 
   const clearSimulation = () => {
     setReferenceString('');
-    setExecutionSteps([]);
-    setLocalStats(null);
+    setMemory(prev => ({
+      ...prev,
+      executionSteps: [],
+      stats: null
+    }));
   };
 
   const loadExample = () => {
@@ -203,7 +200,7 @@ function MemoryManagement() {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent'
         }}>
-          ⚙️ Configuration
+          Configuration
         </h3>
 
         <Form style={{ marginBottom: '15px' }}>
@@ -318,7 +315,7 @@ function MemoryManagement() {
             e.target.style.boxShadow = '0 4px 15px rgba(50, 130, 184, 0.4)';
           }}
         >
-          🚀 Run Simulation
+          Run Simulation
         </Button>
 
         <Button 
@@ -345,7 +342,7 @@ function MemoryManagement() {
             e.target.style.boxShadow = '0 4px 15px rgba(27, 38, 44, 0.4)';
           }}
         >
-          🗑️ Clear
+          Clear
         </Button>
       </div>
 
@@ -378,7 +375,7 @@ function MemoryManagement() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            📊 Performance Statistics
+            Performance Statistics
           </h3>
 
           {localStats ? (
@@ -406,7 +403,7 @@ function MemoryManagement() {
                   alignItems: 'center'
                 }}>
                   <span style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.9)', fontWeight: '600' }}>
-                    🔄 Algorithm:
+                    Algorithm:
                   </span>
                   <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#BBE1FA' }}>
                     {localStats.algorithm}
@@ -423,7 +420,7 @@ function MemoryManagement() {
                   alignItems: 'center'
                 }}>
                   <span style={{ fontSize: '0.7rem', color: 'rgba(255, 255, 255, 0.9)', fontWeight: '600' }}>
-                    🗂️ Frames:
+                    Frames:
                   </span>
                   <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#BBE1FA' }}>
                     {localStats.frames}
@@ -553,7 +550,6 @@ function MemoryManagement() {
               color: '#a0aec0',
               fontStyle: 'italic'
             }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>📊</div>
               <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>
                 No statistics available
               </div>
