@@ -248,30 +248,38 @@ function Scheduler() {
         // Round Robin with time quantum = 2
         const timeQuantum = 2;
         const queue = [];
-        const remainingProcesses = [...processes].map(p => ({
-          ...p,
-          remaining_time: p.burst_time,
-          first_response: -1
-        }));
+        
+        // Create a map to track remaining time for each process
+        const processMap = new Map();
+        processes.forEach(p => {
+          processMap.set(p.pid, {
+            ...p,
+            remaining_time: p.burst_time,
+            first_response: -1
+          });
+        });
+        
+        // Sort by arrival time
+        const arrivalSorted = [...processes].sort((a, b) => a.arrival_time - b.arrival_time);
         
         currentTime = 0;
         let processIndex = 0;
-        const arrivalSorted = [...remainingProcesses].sort((a, b) => a.arrival_time - b.arrival_time);
         
-        // Add first process to queue
+        // Add first process to queue at its arrival time
         if (arrivalSorted.length > 0) {
           currentTime = arrivalSorted[0].arrival_time;
-          queue.push(arrivalSorted[processIndex++]);
+          queue.push(arrivalSorted[processIndex++].pid);
         }
         
         while (queue.length > 0 || processIndex < arrivalSorted.length) {
           if (queue.length === 0) {
-            // Jump to next arrival
+            // Jump to next arrival time
             currentTime = arrivalSorted[processIndex].arrival_time;
-            queue.push(arrivalSorted[processIndex++]);
+            queue.push(arrivalSorted[processIndex++].pid);
           }
           
-          const currentProcess = queue.shift();
+          const currentPid = queue.shift();
+          const currentProcess = processMap.get(currentPid);
           const startTime = currentTime;
           const executeTime = Math.min(timeQuantum, currentProcess.remaining_time);
           const endTime = startTime + executeTime;
@@ -290,15 +298,15 @@ function Scheduler() {
           currentProcess.remaining_time -= executeTime;
           currentTime = endTime;
           
-          // Add newly arrived processes to queue
+          // Add newly arrived processes to queue (by PID)
           while (processIndex < arrivalSorted.length && 
                  arrivalSorted[processIndex].arrival_time <= currentTime) {
-            queue.push(arrivalSorted[processIndex++]);
+            queue.push(arrivalSorted[processIndex++].pid);
           }
           
           // Re-add current process if not finished
           if (currentProcess.remaining_time > 0) {
-            queue.push(currentProcess);
+            queue.push(currentPid);
           } else {
             // Process completed
             const turnaroundTime = currentTime - currentProcess.arrival_time;
