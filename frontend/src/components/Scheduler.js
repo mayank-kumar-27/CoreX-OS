@@ -602,7 +602,7 @@ function Scheduler() {
               e.target.style.color = '#0F4C75';
             }}
           >
-            Load Example Processes
+            📝 Load Example Processes
           </Button>
         </Form>
 
