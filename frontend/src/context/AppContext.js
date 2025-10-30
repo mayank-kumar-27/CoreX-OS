@@ -407,7 +407,35 @@ Utilities:
   echo <text>        - Display text
   clear              - Clear terminal
   help               - Show this help
+  introdevs          - Meet the development team
   exit               - Exit terminal`
+        };
+        break;
+
+      case 'introdevs':
+        response = {
+          success: true,
+          output: `╔══════════════════════════════════════════════════════════════════╗
+║               CoreX OS Development Team                          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+→ Project Manager - Yugal Mahajan
+  Sprint planning, module integration, faculty coordination
+
+→ System Architect - Prabhu Rudraksh
+  System design, VFS/memory/scheduler architecture, Draw.io diagrams
+
+→ Backend Developer - Abhijit Sutradhar
+  C modules, memory management, CPU scheduling, Flask API
+
+→ Frontend Developer - Mayank Kumar
+  React.js UI, Gantt charts, memory maps, Chart.js dashboards
+
+→ Quality Assurance - Lavanya Agrawal
+  Unit/integration tests, Valgrind profiling, documentation
+
+──────────────────────────────────────────────────────────────────
+Thank you for exploring CoreX OS!`
         };
         break;
 
