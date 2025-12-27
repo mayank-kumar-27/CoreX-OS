@@ -419,20 +419,7 @@ Utilities:
 ║               CoreX OS Development Team                          ║
 ╚══════════════════════════════════════════════════════════════════╝
 
-→ Project Manager - Yugal Mahajan
-  Sprint planning, module integration, faculty coordination
-
-→ System Architect - Prabhu Rudraksh
-  System design, VFS/memory/scheduler architecture, Draw.io diagrams
-
-→ Backend Developer - Abhijit Sutradhar
-  C modules, memory management, CPU scheduling, Flask API
-
-→ Frontend Developer - Mayank Kumar
-  React.js UI, Gantt charts, memory maps, Chart.js dashboards
-
-→ Quality Assurance - Lavanya Agrawal
-  Unit/integration tests, Valgrind profiling, documentation
+Mayank Kumar
 
 ──────────────────────────────────────────────────────────────────
 Thank you for exploring CoreX OS!`
