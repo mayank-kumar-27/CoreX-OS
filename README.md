@@ -341,7 +341,7 @@ Developed as an educational Operating Systems project demonstrating:
 
 ## 🙏 Acknowledgments
 
-- Inspired by classic OS textbooks (Silberschatz, Tanenbaum, Stallings)
+- Inspired by classic OS textbooks (Mayank Kumar)
 - Built with modern web technologies (React, Context API, Bootstrap)
 - Designed for hands-on learning and experimentation
 
